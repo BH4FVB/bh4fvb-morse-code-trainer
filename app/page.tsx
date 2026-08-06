@@ -13,14 +13,23 @@ const kochOrder = ["K", "M", "R", "S", "U", "A", "P", "T", "L", "O", "W", "I", "
 const kochPhases = ["阶段 01–10", "阶段 11–20", "阶段 21–30", "阶段 31–40"];
 
 type Lesson = { id: number; phase: string; title: string; added: string[]; chars: string[] };
-const lessons: Lesson[] = [];
-kochOrder.forEach((character, i) => lessons.push({
-  id: i + 1,
-  phase: kochPhases[Math.floor(i / 10)],
-  title: i === 0 ? "从 K 开始" : `加入 ${character}`,
-  added: [character],
-  chars: kochOrder.slice(0, i + 1),
-}));
+const lessons: Lesson[] = [{
+  id: 1,
+  phase: kochPhases[0],
+  title: "从 K 与 M 开始",
+  added: kochOrder.slice(0, 2),
+  chars: kochOrder.slice(0, 2),
+}];
+kochOrder.slice(2).forEach((character, i) => {
+  const id = i + 2;
+  lessons.push({
+    id,
+    phase: kochPhases[Math.floor((id - 1) / 10)],
+    title: `加入 ${character}`,
+    added: [character],
+    chars: kochOrder.slice(0, i + 3),
+  });
+});
 
 const operatingSets = [
   ["CQ", "DE", "K", "KN", "AR", "SK", "CL", "AS", "R"],
@@ -73,7 +82,7 @@ export default function Home() {
   const timersRef = useRef<number[]>([]);
   const runRef = useRef(0);
   const posRef = useRef(0);
-  const lesson = lessons[lessonId - 1];
+  const lesson = lessons.find(item => item.id === lessonId) || lessons[0];
   const isAdvanced = lessonId > 40;
   const unit = 1.2 / wpm;
   const farnsworth = Math.max(unit, 1.2 / effective);
@@ -81,7 +90,7 @@ export default function Home() {
   useEffect(() => {
     if (window.matchMedia("(max-width: 700px)").matches) setViewportMode("mobile");
     const raw = localStorage.getItem("cw-trainer-settings");
-    if (raw) { try { const s = JSON.parse(raw); const savedLesson = s.lessonId || 1; setWpm(s.wpm || 20); setEffective(s.effective || 10); setFrequency(s.frequency || 600); setGroupSize(s.groupSize || 5); setLessonId(savedLesson); setPhaseFilter(lessons[savedLesson - 1]?.phase || "字母"); } catch {} }
+    if (raw) { try { const s = JSON.parse(raw); const savedLesson = s.lessonId || 1; const savedCourse = lessons.find(item => item.id === savedLesson) || lessons[0]; setWpm(s.wpm || 20); setEffective(s.effective || 10); setFrequency(s.frequency || 600); setGroupSize(s.groupSize || 5); setLessonId(savedCourse.id); setPhaseFilter(savedCourse.phase); } catch {} }
   }, []);
   useEffect(() => { localStorage.setItem("cw-trainer-settings", JSON.stringify({ wpm, effective, frequency, groupSize, lessonId })); }, [wpm, effective, frequency, groupSize, lessonId]);
   useEffect(() => () => stopAll(false), []);
@@ -168,8 +177,8 @@ export default function Home() {
           <div className="sectionTitle pathTitle"><span>01</span><div><h2>课程路径</h2><p>循序解锁全部字符</p></div><button className="pathToggle" onClick={() => setMobilePathOpen(v => !v)} aria-expanded={mobilePathOpen}>{mobilePathOpen ? "收起课程 ▲" : `展开课程 · ${lesson.phase} ▼`}</button></div>
           <div className="modeSwitch"><button className={!isAdvanced && !freeMode ? "active" : ""} onClick={() => { stopAll(); setFreeMode(false); setLessonId(1); setPhaseFilter(kochPhases[0]); }}>基础课程</button><button className={isAdvanced && !freeMode ? "active" : ""} onClick={() => { stopAll(); setFreeMode(false); setLessonId(41); setPhaseFilter("通联"); }}>进阶训练</button><button className={freeMode ? "active" : ""} onClick={() => { stopAll(); setFreeMode(true); }}>自由模式</button></div>
           <div className="phaseTabs" aria-label="按阶段筛选课程">
-            {(isAdvanced ? [{ phase: "通联", count: 5 }, { phase: "Q简语", count: 5 }] : kochPhases.map(phase => ({ phase, count: 10 }))).map(item =>
-              <button key={item.phase} className={phaseFilter === item.phase ? "active" : ""} onClick={() => setPhaseFilter(item.phase)} aria-pressed={phaseFilter === item.phase}>{item.phase} {item.count}</button>
+            {(isAdvanced ? ["通联", "Q简语"] : kochPhases).map(phase =>
+              <button key={phase} className={phaseFilter === phase ? "active" : ""} onClick={() => setPhaseFilter(phase)} aria-pressed={phaseFilter === phase}>{phase}</button>
             )}
           </div>
           <div className="lessonList">
