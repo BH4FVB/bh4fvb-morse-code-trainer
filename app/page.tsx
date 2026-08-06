@@ -5,30 +5,22 @@ import { useEffect, useMemo, useRef, useState } from "react";
 const MORSE: Record<string, string> = {
   A: ".-", B: "-...", C: "-.-.", D: "-..", E: ".", F: "..-.", G: "--.", H: "....", I: "..", J: ".---", K: "-.-", L: ".-..", M: "--", N: "-.", O: "---", P: ".--.", Q: "--.-", R: ".-.", S: "...", T: "-", U: "..-", V: "...-", W: ".--", X: "-..-", Y: "-.--", Z: "--..",
   "0": "-----", "1": ".----", "2": "..---", "3": "...--", "4": "....-", "5": ".....", "6": "-....", "7": "--...", "8": "---..", "9": "----.",
-  ".": ".-.-.-", "，": "--..--", "：": "---...", "？": "..--..", "‘": ".----.", "-": "-....-", "（": "-.--.", "）": "-.--.-", "/": "-..-.", "=": "-...-", "+": ".-.-.", "“": ".-..-.", "*": "-..-", "@": ".--.-.",
+  ".": ".-.-.-", ",": "--..--", "，": "--..--", "：": "---...", "?": "..--..", "？": "..--..", "‘": ".----.", "-": "-....-", "（": "-.--.", "）": "-.--.-", "/": "-..-.", "=": "-...-", "+": ".-.-.", "“": ".-..-.", "*": "-..-", "@": ".--.-.",
 };
 const PROSIGNS: Record<string, string> = { AR: ".-.-.", SK: "...-.-", KN: "-.--.", AS: ".-...", CL: "-.-..-.." };
 
-const alphabetOrder = ["K", "M", "R", "S", "U", "A", "P", "T", "L", "O", "W", "I", "N", "J", "E", "F", "Y", "V", "G", "Q", "Z", "H", "B", "C", "D", "X"];
-const digitPairs = [["1", "2"], ["3", "4"], ["5", "6"], ["7", "8"], ["9", "0"]];
-const punctuationSets = [[".", "，", "？"], ["：", "‘", "-"], ["（", "）", "/"], ["=", "+", "“"], ["*", "@"]];
+const kochOrder = ["K", "M", "R", "S", "U", "A", "P", "T", "L", "O", "W", "I", ".", "N", "J", "E", "F", "0", "Y", ",", "V", "G", "/", "Q", "9", "Z", "H", "3", "8", "B", "?", "4", "2", "7", "C", "1", "D", "6", "X", "5"];
+const kochPhases = ["阶段 01–10", "阶段 11–20", "阶段 21–30", "阶段 31–40"];
 
 type Lesson = { id: number; phase: string; title: string; added: string[]; chars: string[] };
 const lessons: Lesson[] = [];
-for (let i = 0; i < 25; i++) {
-  const count = i + 2;
-  lessons.push({ id: i + 1, phase: "字母", title: i === 0 ? "第一次呼叫" : `加入 ${alphabetOrder[count - 1]}`, added: i === 0 ? alphabetOrder.slice(0, 2) : [alphabetOrder[count - 1]], chars: alphabetOrder.slice(0, count) });
-}
-let learned = [...alphabetOrder];
-digitPairs.forEach((pair, i) => { learned = [...learned, ...pair]; lessons.push({ id: 26 + i, phase: "数字", title: `数字 ${pair.join(" · ")}`, added: pair, chars: [...learned] }); });
-punctuationSets.forEach((set, i) => { learned = [...learned, ...set]; lessons.push({ id: 31 + i, phase: "标点", title: `符号 ${set.join("  ")}`, added: set, chars: [...learned] }); });
-[
-  ["字母快抄", alphabetOrder],
-  ["字母与数字", [...alphabetOrder, ...digitPairs.flat()]],
-  ["符号辨音", punctuationSets.flat()],
-  ["全字符混合", learned],
-  ["毕业抄收", learned],
-].forEach(([title, chars], i) => lessons.push({ id: 36 + i, phase: "综合", title: title as string, added: [], chars: chars as string[] }));
+kochOrder.forEach((character, i) => lessons.push({
+  id: i + 1,
+  phase: kochPhases[Math.floor(i / 10)],
+  title: i === 0 ? "从 K 开始" : `加入 ${character}`,
+  added: [character],
+  chars: kochOrder.slice(0, i + 1),
+}));
 
 const operatingSets = [
   ["CQ", "DE", "K", "KN", "AR", "SK", "CL", "AS", "R"],
@@ -59,7 +51,7 @@ const labelOf = (c: string) => ({ "，": "逗号", "：": "冒号", "？": "问�
 
 export default function Home() {
   const [lessonId, setLessonId] = useState(1);
-  const [phaseFilter, setPhaseFilter] = useState("字母");
+  const [phaseFilter, setPhaseFilter] = useState(kochPhases[0]);
   const [freeMode, setFreeMode] = useState(false);
   const [freeText, setFreeText] = useState("CQ CQ CQ DE BH4FVB K");
   const [viewportMode, setViewportMode] = useState<"desktop" | "mobile">("desktop");
@@ -162,7 +154,7 @@ export default function Home() {
 
       <div className="pageFlow">
       <section className="hero" id="top">
-        <div className="heroIntro"><p className="eyebrow">{freeMode ? "FREE PLAY · 自由模式" : isAdvanced ? `ADVANCED ${String(lessonId - 40).padStart(2, "0")} / 10` : `COURSE ${String(lessonId).padStart(2, "0")} / 40`}</p><p className="intro">从 K 与 M 开始，让声音直接变成字符。40 节基础课程、10 节进阶训练与自由播放，建立听觉条件反射。</p></div>
+        <div className="heroIntro"><p className="eyebrow">{freeMode ? "FREE PLAY · 自由模式" : isAdvanced ? `ADVANCED ${String(lessonId - 40).padStart(2, "0")} / 10` : `COURSE ${String(lessonId).padStart(2, "0")} / 40`}</p><p className="intro">遵循经典 Koch 40 符号练习顺序，从 K 开始逐项加入核心字符。另有 10 节进阶训练与自由播放，建立听觉条件反射。</p></div>
         <div className="settingGrid heroSettings">
           <Slider label="字符速度" value={wpm} min={15} max={50} step={1} unit="WPM" note="点划本身的发送速度" onChange={setWpm}/>
           <Slider label="有效速度" value={effective} min={5} max={30} step={1} unit="WPM" note="控制字符与组之间的留白" onChange={setEffective}/>
@@ -174,9 +166,9 @@ export default function Home() {
       <section className="workspace">
         <aside className={`lessonsPanel ${freeMode ? "freeActive" : ""} ${!mobilePathOpen ? "pathCollapsed" : ""}`}>
           <div className="sectionTitle pathTitle"><span>01</span><div><h2>课程路径</h2><p>循序解锁全部字符</p></div><button className="pathToggle" onClick={() => setMobilePathOpen(v => !v)} aria-expanded={mobilePathOpen}>{mobilePathOpen ? "收起课程 ▲" : `展开课程 · ${lesson.phase} ▼`}</button></div>
-          <div className="modeSwitch"><button className={!isAdvanced && !freeMode ? "active" : ""} onClick={() => { stopAll(); setFreeMode(false); setLessonId(1); setPhaseFilter("字母"); }}>基础课程</button><button className={isAdvanced && !freeMode ? "active" : ""} onClick={() => { stopAll(); setFreeMode(false); setLessonId(41); setPhaseFilter("通联"); }}>进阶训练</button><button className={freeMode ? "active" : ""} onClick={() => { stopAll(); setFreeMode(true); }}>自由模式</button></div>
+          <div className="modeSwitch"><button className={!isAdvanced && !freeMode ? "active" : ""} onClick={() => { stopAll(); setFreeMode(false); setLessonId(1); setPhaseFilter(kochPhases[0]); }}>基础课程</button><button className={isAdvanced && !freeMode ? "active" : ""} onClick={() => { stopAll(); setFreeMode(false); setLessonId(41); setPhaseFilter("通联"); }}>进阶训练</button><button className={freeMode ? "active" : ""} onClick={() => { stopAll(); setFreeMode(true); }}>自由模式</button></div>
           <div className="phaseTabs" aria-label="按阶段筛选课程">
-            {(isAdvanced ? [{ phase: "通联", count: 5 }, { phase: "Q简语", count: 5 }] : [{ phase: "字母", count: 25 }, { phase: "数字", count: 5 }, { phase: "标点", count: 5 }, { phase: "综合", count: 5 }]).map(item =>
+            {(isAdvanced ? [{ phase: "通联", count: 5 }, { phase: "Q简语", count: 5 }] : kochPhases.map(phase => ({ phase, count: 10 }))).map(item =>
               <button key={item.phase} className={phaseFilter === item.phase ? "active" : ""} onClick={() => setPhaseFilter(item.phase)} aria-pressed={phaseFilter === item.phase}>{item.phase} {item.count}</button>
             )}
           </div>
