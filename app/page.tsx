@@ -175,7 +175,6 @@ export default function Home() {
         <aside className={`lessonsPanel ${freeMode ? "freeActive" : ""} ${!mobilePathOpen ? "pathCollapsed" : ""}`}>
           <div className="sectionTitle pathTitle"><span>01</span><div><h2>课程路径</h2><p>循序解锁全部字符</p></div><button className="pathToggle" onClick={() => setMobilePathOpen(v => !v)} aria-expanded={mobilePathOpen}>{mobilePathOpen ? "收起课程 ▲" : `展开课程 · ${lesson.phase} ▼`}</button></div>
           <div className="modeSwitch"><button className={!isAdvanced && !freeMode ? "active" : ""} onClick={() => { stopAll(); setFreeMode(false); setLessonId(1); setPhaseFilter("字母"); }}>基础课程</button><button className={isAdvanced && !freeMode ? "active" : ""} onClick={() => { stopAll(); setFreeMode(false); setLessonId(41); setPhaseFilter("通联"); }}>进阶训练</button><button className={freeMode ? "active" : ""} onClick={() => { stopAll(); setFreeMode(true); }}>自由模式</button></div>
-          {freeMode && <div className="freeHint"><b>自由发送台</b><p>输入字母、数字和常用标点，按你的当前速度与音调实时播放。</p><span>支持 A–Z · 0–9 · 14 种标点</span></div>}
           <div className="phaseTabs" aria-label="按阶段筛选课程">
             {(isAdvanced ? [{ phase: "通联", count: 5 }, { phase: "Q简语", count: 5 }] : [{ phase: "字母", count: 25 }, { phase: "数字", count: 5 }, { phase: "标点", count: 5 }, { phase: "综合", count: 5 }]).map(item =>
               <button key={item.phase} className={phaseFilter === item.phase ? "active" : ""} onClick={() => setPhaseFilter(item.phase)} aria-pressed={phaseFilter === item.phase}>{item.phase} {item.count}</button>
